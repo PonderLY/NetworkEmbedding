@@ -1,0 +1,116 @@
+9826
+start reading initial embeddings
+finish reading initial embeddings
+Constructing Trees
+Initializing network...
+Epoch0: d_loss 53.454952 , g_loss 2.086124
+Epoch0: generator embedding
+Type:  w mr: 3.0122 mrr: 0.606
+Type:  l mr: 3.2197 mrr: 0.5877
+Type:  t mr: 5.1408 mrr: 0.3328
+Epoch0: discriminator embedding
+Type:  w mr: 5.2943 mrr: 0.3285
+Type:  l mr: 6.0908 mrr: 0.272
+Type:  t mr: 5.9933 mrr: 0.272
+Mr predicting and embedding writing of Epoch0 done!
+
+Epoch1: d_loss 104.903191 , g_loss 1.508793
+Epoch1: generator embedding
+Type:  w mr: 3.183 mrr: 0.5809
+Type:  l mr: 3.6308 mrr: 0.5266
+Type:  t mr: 5.3458 mrr: 0.3189
+Epoch1: discriminator embedding
+Type:  w mr: 5.3984 mrr: 0.3215
+Type:  l mr: 5.9638 mrr: 0.2744
+Type:  t mr: 6.0262 mrr: 0.2667
+Mr predicting and embedding writing of Epoch1 done!
+
+Epoch2: d_loss 22.243338 , g_loss 1.256061
+Epoch2: generator embedding
+Type:  w mr: 3.3312 mrr: 0.5588
+Type:  l mr: 3.9255 mrr: 0.4807
+Type:  t mr: 5.5317 mrr: 0.3071
+Epoch2: discriminator embedding
+Type:  w mr: 5.4334 mrr: 0.3206
+Type:  l mr: 5.9385 mrr: 0.2773
+Type:  t mr: 6.0004 mrr: 0.2668
+Mr predicting and embedding writing of Epoch2 done!
+
+Epoch3: d_loss 189.114166 , g_loss 1.111493
+Epoch3: generator embedding
+Type:  w mr: 3.4314 mrr: 0.5418
+Type:  l mr: 4.0404 mrr: 0.4551
+Type:  t mr: 5.6223 mrr: 0.2987
+Epoch3: discriminator embedding
+Type:  w mr: 5.617 mrr: 0.3016
+Type:  l mr: 5.9307 mrr: 0.2781
+Type:  t mr: 6.0026 mrr: 0.2575
+Mr predicting and embedding writing of Epoch3 done!
+
+Epoch4: d_loss 209.138397 , g_loss 1.018417
+Epoch4: generator embedding
+Type:  w mr: 3.5303 mrr: 0.5242
+Type:  l mr: 4.0876 mrr: 0.4376
+Type:  t mr: 5.6667 mrr: 0.2939
+Epoch4: discriminator embedding
+Type:  w mr: 5.636 mrr: 0.3019
+Type:  l mr: 5.9118 mrr: 0.2794
+Type:  t mr: 5.9873 mrr: 0.2513
+Mr predicting and embedding writing of Epoch4 done!
+
+Epoch5: d_loss 12.443477 , g_loss 0.947738
+Epoch5: generator embedding
+Type:  w mr: 3.6275 mrr: 0.507
+Type:  l mr: 4.1025 mrr: 0.425
+Type:  t mr: 5.7456 mrr: 0.2868
+Epoch5: discriminator embedding
+Type:  w mr: 5.7069 mrr: 0.2948
+Type:  l mr: 5.931 mrr: 0.2808
+Type:  t mr: 5.952 mrr: 0.2503
+Mr predicting and embedding writing of Epoch5 done!
+
+Epoch6: d_loss 4.336740 , g_loss 0.890103
+Epoch6: generator embedding
+Type:  w mr: 3.7638 mrr: 0.4858
+Type:  l mr: 4.1259 mrr: 0.4205
+Type:  t mr: 5.795 mrr: 0.2847
+Epoch6: discriminator embedding
+Type:  w mr: 5.6873 mrr: 0.2959
+Type:  l mr: 6.1554 mrr: 0.2647
+Type:  t mr: 6.0313 mrr: 0.2371
+Mr predicting and embedding writing of Epoch6 done!
+
+Epoch7: d_loss 12.474742 , g_loss 0.834811
+Epoch7: generator embedding
+Type:  w mr: 3.8994 mrr: 0.4665
+Type:  l mr: 4.2237 mrr: 0.4067
+Type:  t mr: 5.8694 mrr: 0.28
+Epoch7: discriminator embedding
+Type:  w mr: 5.7675 mrr: 0.2915
+Type:  l mr: 6.1205 mrr: 0.2659
+Type:  t mr: 5.9391 mrr: 0.2671
+Mr predicting and embedding writing of Epoch7 done!
+
+Epoch8: d_loss 168.084152 , g_loss 0.788755
+Epoch8: generator embedding
+Type:  w mr: 4.0901 mrr: 0.444
+Type:  l mr: 4.3121 mrr: 0.396
+Type:  t mr: 5.9039 mrr: 0.2754
+Epoch8: discriminator embedding
+Type:  w mr: 5.7447 mrr: 0.2909
+Type:  l mr: 6.0161 mrr: 0.2729
+Type:  t mr: 5.9666 mrr: 0.2578
+Mr predicting and embedding writing of Epoch8 done!
+
+Epoch9: d_loss 217.952820 , g_loss 0.741008
+Epoch9: generator embedding
+Type:  w mr: 4.354 mrr: 0.4154
+Type:  l mr: 4.5842 mrr: 0.3748
+Type:  t mr: 5.9143 mrr: 0.2757
+Epoch9: discriminator embedding
+Type:  w mr: 5.8147 mrr: 0.2862
+Type:  l mr: 5.9611 mrr: 0.2784
+Type:  t mr: 5.9226 mrr: 0.2483
+Mr predicting and embedding writing of Epoch9 done!
+
+Model training done, elapsed time:  63814.0

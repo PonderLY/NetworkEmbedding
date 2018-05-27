@@ -1,5 +1,5 @@
 import numpy as np
-batch_size_dis = 64  # batch size for discriminator
+batch_size_dis = 63  # batch size for discriminator
 batch_size_gen = 63  # batch size for generator
 lambda_dis = 1e-5  # l2 loss regulation factor for discriminator
 lambda_gen = 1e-5  # l2 loss regulation factor for generator

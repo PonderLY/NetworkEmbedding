@@ -4,6 +4,13 @@ GraphGAN for Crossmap V2
 
 Add tf.summary for g and d loss
 Add mr_predict for every epoch
+---------------------------------
+
+CrossModalGAN for Crossmap V1
+modified from GraphGAN
+20180622
+
+Change the generator to cross modal one.
 
 """
 import sys

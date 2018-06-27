@@ -1,6 +1,6 @@
 import numpy as np
-batch_size_dis = 63  # batch size for discriminator
-batch_size_gen = 63  # batch size for generator
+batch_size_dis = 64  # batch size for discriminator
+batch_size_gen = 64  # batch size for generator
 lambda_dis = 1e-5  # l2 loss regulation factor for discriminator
 lambda_gen = 1e-5  # l2 loss regulation factor for generator
 n_sample_dis = 20  # sample num for generator
@@ -11,13 +11,13 @@ save_steps = 10
 lr_dis = 1e-4  # learning rate for discriminator
 lr_gen = 1e-3  # learning rate for discriminator
 
-max_epochs = 50  # outer loop number
-max_epochs_gen = 5  # loop number for generator
-max_epochs_dis = 5  # loop number for discriminator
+max_epochs = 20  # outer loop number
+max_epochs_gen = 10  # loop number for generator
+max_epochs_dis = 10  # loop number for discriminator
 
 gen_for_d_iters = 10  # iteration numbers for generate new data for discriminator
 max_degree = 0  # the max node degree of the network
-model_log = "../log/iteration1/"
+model_log = "../log/iteration/"
 
 use_mul = False # control if use the multiprocessing when constructing trees
 load_model = False  # if load the model for continual training
@@ -30,8 +30,8 @@ tree_path = "../../data/input/trees"
 train_filename = "../../data/input/toy-edges.txt"
 test_filename = ""
 test_neg_filename = ""
-n_embed = 300
-n_node = 9890
+n_embed = 10
+n_node = 572
 pretrain_emd_filename_d = "../../data/input/embed.txt"
 pretrain_emd_filename_g = "../../data/input/embed.txt"
 modes = ["dis", "gen"]
@@ -44,4 +44,3 @@ test_data = "../../data/input/test.data"
 crossmap = "../../data/input/pickled.model"
 predict_type = ['w', 'l', 't']
 node_dict = "../../data/input/node_dict111.txt"
-

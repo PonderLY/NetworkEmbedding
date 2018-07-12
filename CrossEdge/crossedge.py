@@ -3,7 +3,8 @@ Python implementation of Crossmap
 Training along different edge types
 sigmoid_cross_entropy_with_logits
 write embedding
-20180704
+add context embedding sm_w_t sm_b
+20180712
 Author: Liu Yang
 """
 import numpy as np 
@@ -65,7 +66,9 @@ class CrossNet(object):
             # init = tf.constant_initializer(self.node_emd_init) # To use pretrained embedding
             self.node_embed = tf.get_variable(name="node_embed", shape=(self.node_num, self.embed_dim), 
                                                 dtype=tf.float32, initializer=init, trainable=True)
-        
+            self.sm_w_t = tf.Variable(tf.zeros([self.node_num, self.embed_dim], dtype=tf.float32), name='sm_w_t')
+            self.sm_b = tf.Variable(tf.zeros([self.node_num], dtype=tf.float32), name='sm_b')
+
         # placeholder
         self.center_node = tf.placeholder(tf.int32, shape=[None])
         self.pos_node = tf.placeholder(tf.int32, shape=[None])
@@ -73,23 +76,18 @@ class CrossNet(object):
         
         # look up embeddings
         self.center_embedding= tf.nn.embedding_lookup(self.node_embed, self.center_node)  
-        self.pos_embedding = tf.nn.embedding_lookup(self.node_embed, self.pos_node)
-        self.neg_embedding = tf.nn.embedding_lookup(self.node_embed, self.neg_node)
+        self.pos_w = tf.nn.embedding_lookup(self.sm_w_t, self.pos_node)
+        self.pos_b = tf.nn.embedding_lookup(self.sm_b, self.pos_node)        
+        self.neg_w = tf.nn.embedding_lookup(self.sm_w_t, self.neg_node)
+        self.neg_b = tf.nn.embedding_lookup(self.sm_b, self.neg_node)        
 
-        self.c_pos_product = tf.reduce_sum(tf.multiply(self.center_embedding, self.pos_embedding), axis=1)
-        self.pos_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=self.c_pos_product,
-                                                                               labels=tf.ones_like(self.c_pos_product)))
-        # self.pos_loss = -tf.reduce_sum(tf.log(1+tf.nn.sigmoid(self.c_pos_product)))
-        # self.pos_loss = -tf.reduce_sum(tf.nn.sigmoid(self.c_pos_product))  
-        # self.pos_loss = -tf.reduce_sum(self.c_pos_product)                      
-        self.c_neg_product = tf.reduce_sum(tf.multiply(self.center_embedding, self.neg_embedding), axis=1)
-        self.neg_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=self.c_neg_product,
-                                                                               labels=tf.zeros_like(self.c_neg_product)))
-        # self.neg_loss = tf.reduce_sum(self.c_neg_product)        
-        # self.neg_loss = -tf.reduce_sum(tf.log(2-tf.nn.sigmoid(self.c_neg_product)))
-        # self.loss = self.pos_loss + tf.cast(self.pos_num, tf.float32)*self.neg_loss
-        self.loss = self.pos_loss + self.neg_loss        
-        # self.loss = tf.reshape(self.loss, [])
+        self.pos_logits = tf.reduce_sum(tf.multiply(self.center_embedding, self.pos_w), axis=1) + self.pos_b
+        self.pos_loss = tf.reduce_sum(tf.nn.sigmoid_cross_entropy_with_logits(logits=self.pos_logits,
+                                                                               labels=tf.ones_like(self.pos_logits)))                     
+        self.neg_logits = tf.matmul(self.center_embedding, self.neg_w, transpose_b=True) + self.neg_b
+        self.neg_loss = tf.reduce_sum(tf.nn.sigmoid_cross_entropy_with_logits(logits=self.neg_logits,
+                                                                               labels=tf.zeros_like(self.neg_logits)))
+        self.loss = (self.pos_loss + self.neg_loss) / self.batch_size
         tf.summary.scalar('g_loss', self.loss)
         g_opt = tf.train.AdamOptimizer(config.lr_gen)
         self.g_updates = g_opt.minimize(self.loss)
@@ -149,10 +147,13 @@ class CrossNet(object):
         for s in edge_list:
             center_list.append(s[0])
             pos_list.append(s[1])
-            # neg_sample = np.random.choice(self.node_type[et[1]], size=config.neg_num)
-            neg_sample = random.sample(self.node_type[et[1]], config.neg_num) # only 1 negtive sample
-            neg_list.append(neg_sample[0])
-        return center_list, pos_list, neg_list
+        # neg_sample = np.random.choice(self.node_type[et[1]], size=config.neg_num)
+        neg_list = self.node_type[et[1]]
+        if len(neg_list)<config.neg_num:
+            neg_sample = neg_list
+        else:
+            neg_sample = random.sample(neg_list, config.neg_num) 
+        return center_list, pos_list, neg_sample
 
 
     def read_edges(self, n_node):

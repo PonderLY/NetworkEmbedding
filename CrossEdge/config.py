@@ -6,7 +6,7 @@ write_file_path = "../data/la/embedding/crossedge-epoch"
 
 # Model parameters
 embed_dim = 300
-neg_num = 1
+neg_num = 100
 
 # training parameters
 load_model = False

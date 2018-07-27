@@ -10,7 +10,8 @@ import config
 from copy import deepcopy
 from collections import defaultdict
 from sklearn.metrics.pairwise import cosine_similarity
-
+from sklearn.metrics.pairwise import pairwise_distances_argmin
+import urllib2
 
 
 class CrossQuery(object):
@@ -19,7 +20,6 @@ class CrossQuery(object):
         self.node_num = len(self.node_dict)
         self.embed_dim = config.embed_dim
         self.node_emd = self.read_embedding(self.node_num, self.embed_dim)
-
     
     def read_nodes(self):
         """
@@ -65,7 +65,10 @@ class CrossQuery(object):
 
 
     def get_neighbors(self, query, neighbor_type, neighbor_num):
-        q_id = self.node_id[query][0]
+        if isinstance(query, int):
+            q_id = query
+        else:
+            q_id = self.node_id[query][0]
         q_emd = self.node_emd[q_id, :]
         candidate = self.node_type[neighbor_type]
         candi_similarity = []
@@ -78,13 +81,38 @@ class CrossQuery(object):
             neighbors.append(self.node_dict[candidate[candi_index[-1-k]]][2])
         return neighbors[:neighbor_num]
 
+    def get_loca_centroid(self, l_query):
+        l_id = self.node_type['l']
+        l_center = [self.str2list(self.node_dict[j][2]) for j in l_id]
+        query = [l_query]
+        re = pairwise_distances_argmin(query, l_center)
+        return l_id[re[0]]
+
+    def plot_locations_on_google_map(self, locations, output_path):
+        request ='https://maps.googleapis.com/maps/api/staticmap?zoom=10&size=600x600&maptype=roadmap&'
+        for lat, lng in locations:
+            request += 'markers=color:red%7C' + '%f,%f&' % (lat, lng)
+        proxy = urllib2.ProxyHandler({})
+        opener = urllib2.build_opener(proxy)
+        response = opener.open(request).read()
+        with open(output_path, 'wb') as f:
+            f.write(response)
+            f.close()
+        time.sleep(3)       
+
+    def str2list(self, s):
+        return [float(x) for x in s.strip('[]').split()]
 
 if __name__ == "__main__":
     model = CrossQuery()
     print("10 Nearest Neighbors of the Query!")
     start_time = time.time()   
-    query = ['beach', 'shopping']
-    for q in query:
-        result = model.get_neighbors(q, 'w', 10)
-        print(result)
+    query = ['beach', 'shopping', 'basketball','[33.9424, -118.4137]']
+    location = [[34.043021,-118.2690243]]
+    model.plot_locations_on_google_map(location, './locations.png')
+    # for q in query:
+    #     if '[' in q:
+    #         q = model.get_loca_centroid(eval(q))
+    #     result = model.get_neighbors(q, 'w', 10)
+    #     print(result)
     print("Neighbors found, elapsed time {}s".format(time.time()-start_time))   

@@ -6,17 +6,19 @@ write_file_path = "../data/la/embedding/crossedge-epoch"
 
 # Model parameters
 embed_dim = 300
-neg_num = 100
+neg_num = 1
+edge_type = ['tw','tl', 'wl', 'wt', 'lt', 'lw', 'tt', 'ww', 'll']
+
 
 # training parameters
 load_model = False
 lr_gen = 1e-4
-max_epochs = 100
+max_epochs = 1000000
 train_type = ['tw','tl', 'wl', 'wt', 'lt', 'lw']
 batch_size = 64
 
 # testing parameters
-epoch_test = 10
+epoch_test = 10000
 result_pre = "../data/la/result/epoch-"
 test_data = "../data/la/la-test.data"
 crossmap = "../data/la/la-pickled.model"

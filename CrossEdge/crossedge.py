@@ -4,8 +4,8 @@ Training along different edge types
 sigmoid_cross_entropy_with_logits
 write embedding
 add context embedding sm_w_t sm_b
-add node_degree sampling
-20180809
+add degree_sampler and weight_sampler
+20180810
 Author: Liu Yang
 """
 import numpy as np 
@@ -20,6 +20,7 @@ import tqdm
 import types
 import sys
 from evaluator import QuantitativeEvaluator, QualitativeEvaluator
+from vose_sampler import VoseAlias
 
 
 class CrossData(object):
@@ -123,30 +124,31 @@ class CrossData(object):
 class CrossEdge(CrossData):
     def __init__(self):
         CrossData.__init__(self)
-        # self.node_dict, self.node_type = self.read_nodes()
-        # self.node_num = len(self.node_dict)
+        self.edge_type = config.edge_type
         self.embed_dim = config.embed_dim
-        self.batch_size = config.batch_size
-        # self.line_num, self.linked_nodes, self.non_linked_nodes, self.et2net = self.read_edges(self.node_num)
-        self.node_emd_init = np.random.rand(self.node_num, self.embed_dim)
-        # self.node_emd_init = np.zeros((self.node_num, self.embed_dim), dtype=np.float32)        
-        # self.node_emd_init = self.read_embedding(self.node_num, self.embed_dim)
+        self.batch_size = 1
+        self.degree_sampler = self.degree_sampler_initial()
+        self.weight_sampler = self.weight_sampler_initial()
+        print("Sampling Initialization done!")
         self.build_net()
         self.initialize_network()
     
 
     def train(self):
         print("Start training for {} epoches!".format(config.max_epochs))
+        average_loss = 0.0
         for epoch in tqdm.tqdm(range(config.max_epochs)):
             for t in config.train_type:
                 center_list, pos_list, neg_list = self.get_feed_data(t)
                 feed_dict_g = {self.center_node: center_list, self.pos_node: pos_list, self.neg_node: neg_list}
                 g_loss, _ = self.sess.run([self.loss, self.g_updates], feed_dict=feed_dict_g)
+                average_loss += g_loss
                 
             if epoch % config.epoch_test == 0:
                 ms = self.sess.run(self.summary_op, feed_dict=feed_dict_g)
                 self.summary_writer.add_summary(ms, epoch)
-                print("Epoch{}: g_loss {}".format(epoch, g_loss)) 
+                print("Epoch{}: g_loss {}".format(epoch, average_loss/config.epoch_test))
+                average_loss = 0 
                 self.eval_test_mr(epoch)  
                 self.write_embedding(config.write_file_path+str(epoch)+'.emb')                     
 
@@ -161,9 +163,9 @@ class CrossEdge(CrossData):
             self.sm_b = tf.Variable(tf.zeros([self.node_num], dtype=tf.float32), name='sm_b')
 
         # placeholder
-        self.center_node = tf.placeholder(tf.int32, shape=[None])
-        self.pos_node = tf.placeholder(tf.int32, shape=[None])
-        self.neg_node = tf.placeholder(tf.int32, shape=[None])
+        self.center_node = tf.placeholder(tf.int32, shape=[None], name='center_node')
+        self.pos_node = tf.placeholder(tf.int32, shape=[None], name='pos_node')
+        self.neg_node = tf.placeholder(tf.int32, shape=[None], name='neg_node')
         
         # look up embeddings
         self.center_embedding= tf.nn.embedding_lookup(self.node_embed, self.center_node)  
@@ -184,7 +186,6 @@ class CrossEdge(CrossData):
         # g_opt = tf.train.GradientDescentOptimizer(config.lr_gen)
         self.g_updates = g_opt.minimize(self.loss)
         
-
 
     def initialize_network(self):
         print("Initializing network...")
@@ -210,48 +211,48 @@ class CrossEdge(CrossData):
             print("Model restored...")
 
 
-    # def get_feed_data(self, edge_list, et):
-    #     center_list = []
-    #     pos_list = []
-    #     neg_list = []
-    #     # s is a 2-tuple
-    #     for s in edge_list:
-    #         if len(self.linked_nodes[s[1]][et[0]])<1: # there is no neg for node 
-    #             continue
-    #         else:
-    #             center_list.append(s[0])
-    #             pos_list.append(s[1])
-    #             v_nb = self.linked_nodes[s[1]][et[0]]
-    #             weight_v = [self.et2net[et[1]+et[0]][(s[1], v_)] for v_ in v_nb]
-    #             norm_w = np.linalg.norm(weight_v, ord=1)
-    #             weight_v = weight_v/norm_w
-    #             neg_sample = np.random.choice(v_nb, size=config.neg_num, p=weight_v)
-    #             # neg_sample = random.sample(v_nb, config.neg_num) # only 1 negtive sample
-    #             neg_list.append(neg_sample[0])
-    #     return center_list, pos_list, neg_list
+    def degree_sampler_initial(self):
+        degree_sampler = {}
+        for et in self.edge_type:
+            u_list = self.node_type[et[0]]
+            weight_u = [self.node_degree[et][u_id] for u_id in u_list]
+            p_u = weight_u/np.linalg.norm(weight_u, ord=1)
+            alias_in = dict(zip(u_list, p_u))
+            # print(alias_in.items())
+            try:
+                degree_sampler[et] = VoseAlias(alias_in)
+            except:
+                print(et)
+                print(weight_u)
+                print(p_u)
+        return degree_sampler
 
+
+    def weight_sampler_initial(self):
+        weight_sampler = {}
+        for et in self.edge_type:
+            weight_sampler[et] = {}
+            for u in self.node_type[et[0]]:
+                v_list = self.linked_nodes[u][et[1]]
+                weight_v = [self.et2net[et][(u, v_id)] for v_id in v_list]
+                p_v = weight_v/np.linalg.norm(weight_v, ord=1) 
+                alias_in = dict(zip(v_list, p_v))
+                weight_sampler[et][u] = VoseAlias(alias_in)
+        return weight_sampler
+        
 
     def get_feed_data(self, et):
         # sample start node from the type et[0] degree distribution
-        u_list = self.node_type[et[0]]
-        weight_u = [self.node_degree[et][u_id] for u_id in u_list]
-        p_u = weight_u/np.linalg.norm(weight_u, ord=1)
-        u = np.random.choice(u_list, 1, p=p_u)
+        u = self.degree_sampler[et].alias_generation()
+        while len(self.linked_nodes[u][et[1]])==len(self.node_type[et[1]]):
+            u = self.degree_sampler[et].alias_generation()
         # sample end node from the adjacency distribution
-        v_list = self.linked_nodes[u[0]][et[1]]
-        weight_v = [self.et2net[et][(u[0], v_id)] for v_id in v_list]
-        p_v = weight_v/np.linalg.norm(weight_v, ord=1)        
-        v = np.random.choice(v_list, 1, p=p_v)
+        v = self.weight_sampler[et][u].alias_generation()
         # sample neg node from the type et[1] degree distribution
-        neg_list = self.node_type[et[1]]
-        weight_neg = [self.node_degree[et[1]+et[0]][n_id] for n_id in neg_list]
-        p_neg = weight_neg/np.linalg.norm(weight_neg, ord=1)        
-        if len(neg_list)<config.neg_num:
-            neg_sample = neg_list
-        else:
-            neg_sample = np.random.choice(neg_list, config.neg_num, p=p_neg)
-            neg_sample = neg_sample.tolist() 
-        return u.tolist(), v.tolist(), neg_sample
+        neg = v
+        while neg==v or neg in self.linked_nodes[u][et[1]]:
+            neg = self.degree_sampler[et[1]+et[0]].alias_generation()
+        return [u], [v], [neg]
   
 
     def read_embedding(self, n_node, n_embed):
@@ -276,12 +277,6 @@ class CrossEdge(CrossData):
             f.writelines(lines)
 
 
-    def try1(self):
-        feed_dict_g = {self.center_node: [10], self.pos_node: [4, 6], self.neg_node: [2, 3]}
-        c_pos, c_neg = self.sess.run([self.c_pos_product, self.c_neg_product], feed_dict=feed_dict_g)
-        print(c_pos, c_neg)
-
-
     def eval_test_mr(self, epoch):
         print("Epoch%d:  embedding" % epoch)
         node_embed = self.sess.run(self.node_embed)
@@ -304,7 +299,7 @@ class CrossEdge(CrossData):
 
 if __name__ == "__main__":
     model = CrossEdge()
-    print("Adam Optimizer, lr 1e-4, random initialized, 1 neg sample!")
+    print("Adam Optimizer, lr 1e-2, random initialized, degree sampler and weight sampler!")
     start_time = time.time()   
     # model.eval_test_mr(0)
     model.train()

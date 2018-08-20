@@ -280,13 +280,14 @@ class CrossEdge(CrossData):
     def eval_test_mr(self, epoch):
         print("Epoch%d:  embedding" % epoch)
         node_embed = self.sess.run(self.node_embed)
-        self.mr_predict(node_embed, epoch)
+        context_embed = self.sess.run(self.sm_w_t)
+        self.mr_predict(node_embed, context_embed, epoch)
 
 
-    def mr_predict(self, node_embed, epoch):
+    def mr_predict(self, node_embed, context_embed, epoch):
         test_data = pickle.load(open(config.test_data, 'r'))
         predictor = pickle.load(open(config.crossmap, 'r'))
-        predictor.read_embedding_tf(config, node_embed)
+        predictor.read_embedding_tf(config, node_embed, context_embed)
 
         start_time = time.time()
         for t in config.predict_type:

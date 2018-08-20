@@ -1,0 +1,27 @@
+data_dir: &DIR ../data/la/
+
+test_data: !join [*DIR, la-test.data]
+crossmap: !join [*DIR, pickled.model]
+node_dict_path: !join [*DIR, node_dict111.txt]
+edge_file_path: !join [*DIR, la-edges.txt]
+edge_type: ['tw','tl', 'wl', 'wt', 'lt', 'lw', 'tt', 'ww', 'll']
+
+voca_min: 0
+voca_max: 8000
+dim: 300
+negative: 1
+alpha: 0.02 # learning rate
+epoch: 100
+nt_list: ['w','l','t']
+predict_type: ['w', 'l', 't']
+train_size: 1000000
+test_size: 20000
+kernel_nb_num: 2 # used for efficiency reason (requested by fast k-nearest-neighbor search)
+bandwidth_l: 0.005 # used for detecting spatial hotpsots
+bandwidth_t: 1000.0 # used for detecting temporal hotpsots
+kernel_bandwidth_l: 0.01 # used for spatial smoothing
+kernel_bandwidth_t: 4000.0 # used for temporal smoothing
+second_order: 1
+use_context_vec: 1
+load_existing_model: 0
+perform_case_study: 0

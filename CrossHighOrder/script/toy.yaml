@@ -1,0 +1,39 @@
+data_dir: &DIR ../data/toy/
+
+test_data: !join [*DIR, toy-test.data]
+crossmap: !join [*DIR, pickled.model]
+node_dict_path: !join [*DIR, node_dict111.txt]
+edge_file_path: !join [*DIR, toy-edges.txt]
+edge_type: ['tw','tl', 'wl', 'wt', 'lt', 'lw', 'tt', 'ww', 'll']
+
+voca_min: 0
+voca_max: 20000
+dim: 10
+negative: 1
+alpha: 0.02 # learning rate
+epoch: 100
+nt_list: ['w','l','t']
+predict_type: ['w', 'l', 't']
+train_size: 608
+test_size: 100
+kernel_nb_num: 2 # used for efficiency reason (requested by fast k-nearest-neighbor search)
+bandwidth_l: 0.001 # used for detecting spatial hotpsots
+bandwidth_t: 10.0 # used for detecting temporal hotpsots
+kernel_bandwidth_l: 0.001 # used for spatial smoothing
+kernel_bandwidth_t: 1000.0 # used for temporal smoothing
+second_order: 1
+use_context_vec: 1
+load_existing_model: 0
+perform_case_study: 0
+
+# tweet_file: !join [*DIR, input/tweets.txt]
+# test_data_path: !join [*DIR, input/test.data]
+# model_dir: !join [*DIR, model/]
+# model_pickled_path: !join [*DIR, model/pickled.model]
+# case_dir: !join [*DIR, output/case/]
+# model_embeddings_dir: !join [*DIR, output/embeddings/crossmap-toy.emb]
+
+# mr_embedding_dir: !join [*DIR, output/embeddings/crossmap-toy.emb]
+# node_dict: !join [*DIR, output/embeddings/node_dict111.txt]
+# graph_edges: !join [*DIR, output/embeddings/toy-edges.txt]
+# evaluate_file: !join [*DIR, output/embeddings/toy-results.txt]

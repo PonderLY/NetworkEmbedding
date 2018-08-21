@@ -16,6 +16,7 @@ nt_list: ['w','l','t']
 predict_type: ['w', 'l', 't']
 train_size: 608
 test_size: 100
+sample_size: 60000
 kernel_nb_num: 2 # used for efficiency reason (requested by fast k-nearest-neighbor search)
 bandwidth_l: 0.001 # used for detecting spatial hotpsots
 bandwidth_t: 10.0 # used for detecting temporal hotpsots

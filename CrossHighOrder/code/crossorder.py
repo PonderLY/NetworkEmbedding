@@ -27,12 +27,21 @@ class HighOrder(object):
         self.g = graph
         self.pd = pd
         self.nt2nodes = self.construct_nt2nodes()
-        self.et2net = self.construct_et2net()
+        # self.et2net = self.construct_et2net()
+        self.et2net = self.construct_et2net_from_adjacency()        
         self.nt2vecs = None # center vectors
         self.nt2cvecs = None # context vectors
 
 
     def construct_nt2nodes(self):
+        """
+        Construct self.nt2nodes from self.g.node_type and self.g.node_dict
+        self.g.node_type is a dictionary whose key is the node type and 
+                value is a global node_id list of this type
+        self.g.node_dict is a dictionary whose key is global node id and
+                value is a list [node_type, intype_id, value]
+        self.nt2nodes stores local id for type 't' and 'l' and value for 'w'
+        """
         nt2nodes = {nt:set() for nt in self.pd['nt_list']}
         for n_id in self.g.node_type['t']:
             nt2nodes['t'].add(int(self.g.node_dict[n_id][1]))
@@ -44,6 +53,18 @@ class HighOrder(object):
 
 
     def construct_et2net(self):
+        """
+        Construct self.et2net from self.g.et2net
+        self.g.et2net is a dictionary
+            the first key is the edge type
+            the second key is a 2-tuple (start_node, end_node) global id
+            value is the weight
+        self.et2net is a dictionary
+            the first key is the edge type
+            the second key is the start_node local id or value for word
+            the third key is the end_node local id or value for word
+            value is the weight
+        """
         node_dict = self.g.node_dict
         et2net = defaultdict(lambda : defaultdict(lambda : defaultdict(float)))
         for key_et in self.g.et2net.keys():
@@ -59,8 +80,44 @@ class HighOrder(object):
                 et2net[key_et][s][t] = self.g.et2net[key_et][(key_s,key_t)]
         return et2net
 
+
+    def construct_et2net_from_adjacency(self):
+        node_dict = self.g.node_dict
+        et2net = defaultdict(lambda : defaultdict(lambda : defaultdict(float)))
+        weight = {}
+        for key_et in self.g.et2net.keys():
+            weight[key_et] = np.mat(self.construct_adjacency_matrix(key_et))
+        for key_et in self.g.et2net.keys():        
+            if key_et=='ww':
+                W = weight[key_et]*weight[key_et]*weight[key_et]
+            elif key_et=='ll':
+                W = weight['lw']*weight['wl']
+            else:
+                W = weight[key_et]
+            row, col = W.shape
+            for s in xrange(row):
+                for t in xrange(col):
+                    if W[s,t] >1e-2:
+                        if key_et[0]=='w':
+                            key_id = self.g.node_id2id['w'][s]
+                            key_s = self.g.node_dict[key_id][2]
+                        else:
+                            key_s = s
+                        if key_et[1]=='w':
+                            key_id = self.g.node_id2id['w'][t]
+                            key_t = self.g.node_dict[key_id][2]
+                        else:
+                            key_t = t
+                        et2net[key_et][key_s][key_t] = W[s,t]
+        return et2net
+
+
         
     def construct_adjacency_matrix(self, et):
+        """
+        Construct adjacency matrix of edge type et from self.g.et2net[et] 
+        adj_matrix[s, t] stores the weight of edge (s, t), s and t are local ids
+        """
         node_dict = self.g.node_dict        
         start_num = len(self.g.node_type[et[0]])
         end_num = len(self.g.node_type[et[1]])        
@@ -69,9 +126,10 @@ class HighOrder(object):
         for key_s,key_t in self.g.et2net[et].keys():
             s = int(node_dict[key_s][1])
             t = int(node_dict[key_t][1])            
-            adj_matrix[s, t] = self.g.et2net[et][(s, t)]
-
-        return normalize(adj_matrix, norm='l1')                
+            adj_matrix[s, t] = self.g.et2net[et][(key_s, key_t)]
+        # row normalization
+        # return normalize(adj_matrix, norm='l1')     
+        return adj_matrix           
   
 
     def modify_et2net(self, et, W):
@@ -93,7 +151,7 @@ class HighOrder(object):
 
     def fit(self):
         self.embed_algo = GraphEmbed(self.pd)
-        self.nt2vecs, self.nt2cvecs = self.embed_algo.fit(self.nt2nodes, self.et2net, 1000000)
+        self.nt2vecs, self.nt2cvecs = self.embed_algo.fit(self.nt2nodes, self.et2net, self.pd['sample_size'])
 
 
     def mr_predict(self):
@@ -140,6 +198,7 @@ class GraphEmbed(object):
 					for v, weight in u_nb.items():
 						edge_file.write('\t'.join([str(u), str(v), str(weight), 'e'])+'\n')
 
+
 	def execute_line(self, sample_size):
 		command = ['./hin2vec']
 		command += ['-size', str(self.pd['dim'])]
@@ -178,9 +237,9 @@ if __name__ == "__main__":
     pd = load_params(para_file)  # load parameters as a dict
     g = CrossData(pd)
     model = HighOrder(g, pd)
-    W = model.construct_adjacency_matrix('ww')
-    model.modify_et2net('ww', W*W)
-    print("Start training!")
+    # W = model.construct_adjacency_matrix('ww')
+    # model.modify_et2net('ww', W)
+    print("Start training with 'ww' multiplied 3 times and 'll'='lw'*'wl' without row normalization!")
     start_time = time.time()
     model.fit()
     print("Model training done, elapsed time {}s".format(time.time()-start_time))   

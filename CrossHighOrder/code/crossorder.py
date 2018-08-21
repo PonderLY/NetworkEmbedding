@@ -162,10 +162,12 @@ class HighOrder(object):
         start_time = time.time()
         for t in self.pd['predict_type']:
             evaluator = QuantitativeEvaluator(predict_type=t)
-            evaluator.get_ranks(test_data, predictor)
+            evaluator.get_ranks(test_data, predictor, self.g)
             # evaluator.get_ranks_with_output(test_data, predictor, config.result_pre+str(epoch)+t+'.txt')
             mrr, mr = evaluator.compute_mrr()
             print('Type:{} mr: {}, mrr: {} '.format(evaluator.predict_type, mr, mrr))
+        print("Prediction done, elapsed time {}s".format(time.time()-start_time))   
+        
 
 
 class GraphEmbed(object):

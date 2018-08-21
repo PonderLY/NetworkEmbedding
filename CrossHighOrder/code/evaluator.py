@@ -1,18 +1,40 @@
 import bisect
+import pdb
 import urllib2, time
 from embed import *
 
 class QuantitativeEvaluator:
-    def __init__(self, predict_type='w', fake_num=10):
+    def __init__(self, predict_type='w', real_num=3, fake_num=7):
         self.ranks = []
         self.predict_type = predict_type
         self.fake_num = fake_num
         if self.predict_type=='p':
             self.pois = io.read_pois()
 
-    def get_ranks(self, tweets, predictor):
+    def get_ranks(self, tweets, predictor, graph):
         noiseList = np.random.choice((self.pois if self.predict_type=='p' else tweets), self.fake_num*len(tweets)).tolist()
         for tweet in tweets:
+            t_id, l_id, w_id = self.get_global_id(tweet, predictor, graph)
+            if self.predict_type=='t':
+                l_set = set(graph.linked_nodes[l_id]['t'])
+                w_len = [len(graph.linked_nodes[w]['t']) for w in w_id]
+                w_ind = w_len.index(max(w_len))
+                w_set = set(graph.linked_nodes[w_id[w_ind]]['t'])
+                t_candi = l_set & w_set
+                print('t', len(t_candi), '\n')
+            elif self.predict_type=='l':
+                t_set = set(graph.linked_nodes[t_id]['l'])
+                w_len = [len(graph.linked_nodes[w]['l']) for w in w_id]
+                w_ind = w_len.index(max(w_len))
+                w_set = set(graph.linked_nodes[w_id[w_ind]]['l'])
+                l_candi = t_set & w_set
+                print('l', len(l_candi), '\n')
+            elif self.predict_type=='w':
+                t_set = set(graph.linked_nodes[t_id]['w'])                
+                l_set = set(graph.linked_nodes[l_id]['w'])
+                w_candi = t_set & l_set
+                print('w', len(w_candi), '\n')
+
             scores = []
             if self.predict_type=='p':
                 score = predictor.predict(tweet.ts, tweet.poi_lat, tweet.poi_lng, tweet.words, tweet.category, self.predict_type)
@@ -73,6 +95,18 @@ class QuantitativeEvaluator:
         rranks = [1.0/rank for rank in ranks]
         mrr,mr = sum(rranks)/len(rranks),sum(ranks)/len(ranks)
         return round(mrr,4), round(mr,4)
+
+    def get_global_id(self, tweet, predictor, graph):
+        t_local = predictor.tClus.predict([tweet.ts])
+        t_id = graph.node_id2id['t'][t_local]
+        l_local = predictor.lClus.predict([tweet.lat, tweet.lng])
+        l_id = graph.node_id2id['l'][l_local]
+        w_id = []
+        voca = graph.wd2id.keys()
+        for w in tweet.words:
+            if w in voca:
+                w_id.append(graph.wd2id[w])
+        return t_id, l_id, w_id        
 
 
 class QualitativeEvaluator:

@@ -1,6 +1,7 @@
 """
 Read Twitter Data
 used in high order 
+add self.wd2id
 20180820
 Author: Liu Yang
 """
@@ -20,6 +21,7 @@ class CrossData(object):
         self.line_num, self.linked_nodes, self.et2net = self.read_edges(self.node_num)
         self.node_degree = self.get_degree()
         self.edges = self.get_edges()
+        self.wd2id = self.get_word_id()
 
 
     def read_nodes(self):
@@ -116,3 +118,12 @@ class CrossData(object):
             edges[et] = self.et2net[et].keys()
         return edges
  
+    def get_word_id(self):
+        """
+        wd2id is a dictionary whose key is the word and value is its global id 
+        """
+        wd2id = {}
+        for w_id in self.node_type['w']:
+            word = self.node_dict[w_id][2]
+            wd2id[word] = w_id
+        return wd2id

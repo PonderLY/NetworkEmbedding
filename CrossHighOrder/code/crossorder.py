@@ -23,9 +23,10 @@ from subprocess import call, check_call
 
         
 class HighOrder(object):
-    def __init__(self, graph, pd):
-        self.g = graph
+    def __init__(self, pd, graph_train, graph_test):
         self.pd = pd
+        self.g = graph_train
+        self.g_test = graph_test
         self.nt2nodes = self.construct_nt2nodes()
         # self.et2net = self.construct_et2net()
         self.et2net = self.construct_et2net_from_adjacency()        
@@ -87,11 +88,10 @@ class HighOrder(object):
         weight = {}
         for key_et in self.g.et2net.keys():
             weight[key_et] = np.mat(self.construct_adjacency_matrix(key_et))
-        for key_et in self.g.et2net.keys():        
+        for key_et in self.g.et2net.keys(): 
+            # W = weight[key_et]       
             if key_et=='ww':
-                W = weight[key_et]*weight[key_et]*weight[key_et]
-            elif key_et=='ll':
-                W = weight['lw']*weight['wl']
+                W = weight['ww']*weight['ww']
             else:
                 W = weight[key_et]
             row, col = W.shape
@@ -162,10 +162,12 @@ class HighOrder(object):
         start_time = time.time()
         for t in self.pd['predict_type']:
             evaluator = QuantitativeEvaluator(predict_type=t)
-            evaluator.get_ranks(test_data, predictor, self.g)
+            evaluator.get_ranks(test_data, predictor, self.g_test)
             # evaluator.get_ranks_with_output(test_data, predictor, config.result_pre+str(epoch)+t+'.txt')
             mrr, mr = evaluator.compute_mrr()
             print('Type:{} mr: {}, mrr: {} '.format(evaluator.predict_type, mr, mrr))
+            mrr, mr = evaluator.compute_highest_mrr()
+            print('Type:{} hmr: {}, hmrr: {} '.format(evaluator.predict_type, mr, mrr))
         print("Prediction done, elapsed time {}s".format(time.time()-start_time))   
         
 
@@ -235,13 +237,17 @@ class GraphEmbed(object):
 
 
 if __name__ == "__main__":
-    para_file = sys.argv[1]
-    pd = load_params(para_file)  # load parameters as a dict
-    g = CrossData(pd)
-    model = HighOrder(g, pd)
+    para_train = sys.argv[1]
+    para_test = sys.argv[2]    
+    pd = load_params(para_train)  # load parameters as a dict
+    pd_test = load_params(para_test)  # load parameters as a dict    
+    g_train = CrossData(pd)
+    g_test = CrossData(pd_test)    
+
+    model = HighOrder(pd, g_train, g_test)
     # W = model.construct_adjacency_matrix('ww')
     # model.modify_et2net('ww', W)
-    print("Start training with 'ww' multiplied 3 times and 'll'='lw'*'wl' without row normalization!")
+    print("Start training with new evaluation methods from test tweets, real_num=3, fake_num=7, ww=ww*ww!")
     start_time = time.time()
     model.fit()
     print("Model training done, elapsed time {}s".format(time.time()-start_time))   

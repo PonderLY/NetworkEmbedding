@@ -18,7 +18,7 @@ class CrossData(object):
         self.pd = pd
         self.node_dict, self.node_id2id, self.node_type = self.read_nodes()
         self.node_num = len(self.node_dict)        
-        self.line_num, self.linked_nodes, self.et2net = self.read_edges(self.node_num)
+        self.line_num, self.linked_nodes, self.et2net, self.more_than_once = self.read_edges(self.node_num)
         self.node_degree = self.get_degree()
         self.edges = self.get_edges()
         self.wd2id = self.get_word_id()
@@ -83,14 +83,28 @@ class CrossData(object):
             linked_nodes[j]['t'] = []
             linked_nodes[j]['w'] = []
             linked_nodes[j]['l'] = []
+        more_than_once = {}
+        for j in range(n_node):
+            more_than_once[j] = {} # Initialization empty list for every node
+            more_than_once[j]['t'] = []
+            more_than_once[j]['w'] = []
+            more_than_once[j]['l'] = []
         line_num = 0
         et2net = defaultdict(lambda : defaultdict(float))                
         for line in edge_lines:
             line_num = line_num + 1
             line_lst = line.split()
-            linked_nodes[int(line_lst[1])][line_lst[0][1]].append(int(line_lst[2]))
-            et2net[line_lst[0]][(int(line_lst[1]),int(line_lst[2]))] = float(line_lst[3])
-        return line_num, linked_nodes, et2net
+            et = line_lst[0]
+            s_id = int(line_lst[1])
+            t_id = int(line_lst[2])
+            weight = float(line_lst[3])
+            linked_nodes[s_id][et[1]].append(t_id)
+            et2net[et][(s_id, t_id)] = weight
+            if et[1]=='w' and weight>2.0:
+                more_than_once[s_id][et[1]].append(t_id)
+            elif et[1] in ['t','l'] and weight>1.0:
+                more_than_once[s_id][et[1]].append(t_id)
+        return line_num, linked_nodes, et2net, more_than_once
 
 
     def get_degree(self):

@@ -3,8 +3,7 @@ data_dir: &DIR ../data/la/
 test_data: !join [*DIR, la-test.data]
 crossmap: !join [*DIR, pickled.model]
 node_dict_path: !join [*DIR, node_dict111.txt]
-edge_file_path: !join [*DIR, la-edges.txt]
-test_edges: !join [*DIR, la-test-edges.txt]
+edge_file_path: !join [*DIR, la-test-edges.txt]
 edge_type: ['tw','tl', 'wl', 'wt', 'lt', 'lw', 'tt', 'ww', 'll']
 
 voca_min: 0
